@@ -1,0 +1,9 @@
+node_modules
+src/**/*.js
+dist
+*.d.ts
+*.js.map
+typings
+/nbproject/private/
+nbproject
+*.tgz

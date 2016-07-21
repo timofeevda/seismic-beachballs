@@ -1,0 +1,39 @@
+{
+  "name": "seismic-beachballs",
+  "version": "1.0.0",
+  "description": "Library for generating seismic beachballs as a set of polygon for rendening in 2D and 3D modes",
+  "keywords": [
+    "moment tensor",
+    "seismic",
+    "beachballs",
+  ],
+  "main": "src/entry.js",
+  "typings": "src/entry",
+  "scripts": {
+    "tsc": "tsc",
+    "typings": "typings install"
+  },
+  "author": "Denis Timofeev <timofeevda@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timofeevda/seismic-beachballs"
+  },
+  "license": {
+    "type": "Apache-2.0",
+    "url": "http://opensource.org/licenses/apache2.0.php"
+  },
+  "dependencies": {
+    "lodash": "^4.13.1",
+    "numeric": "^1.2.6",
+    "sylvester": "0.0.21"
+  },
+  "devDependencies": {
+      "chai": "^3.5.0",
+      "mocha": "^2.5.3",
+      "ts-loader": "^0.8.2",
+      "tslint": "^3.12.1",
+      "tslint-loader": "^2.1.5",
+      "typescript": "^1.8.10",
+      "webpack": "^1.13.1"
+  }
+}
