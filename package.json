@@ -5,13 +5,13 @@
   "keywords": [
     "moment tensor",
     "seismic",
-    "beachballs",
+    "beachballs"
   ],
   "main": "src/entry.js",
   "typings": "src/entry",
   "scripts": {
     "tsc": "tsc",
-    "typings": "typings install"
+    "postinstall": "typings install"
   },
   "author": "Denis Timofeev <timofeevda@gmail.com>",
   "repository": {
