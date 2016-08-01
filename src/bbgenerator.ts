@@ -169,7 +169,7 @@ function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
 
     var slice: number
 
-    if ((y1 < f1 && f1 < y4) && (y2 < f2 && f2 < y3)) {
+    if ((y1 <= f1 && f1 <= y4) && (y2 <= f2 && f2 <= y3)) {
         return [
             // lower quadrilateral
             [
@@ -186,7 +186,7 @@ function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
                 [x1, f1]
             ]
         ]
-    } else if ((y1 < f1 && f1 < y4) && f2 < y2) {
+    } else if ((y1 <= f1 && f1 <= y4) && f2 <= y2) {
         slice = ((y1 - f1) * (x2 - x1)) / (f2 - f1)
         return [
             // upper left triangle
@@ -211,7 +211,7 @@ function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
                 [x1, f1]
             ]
         ]
-    } else if (f1 < y1 && (y2 < f2 && f2 < y3)) {
+    } else if (f1 <= y1 && (y2 <= f2 && f2 <= y3)) {
         slice = ((y1 - f1) * (x2 - x1)) / (f2 - f1)
         return [
             // upper right triangle
@@ -236,7 +236,7 @@ function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
                 [x1 + slice, y1]
             ]
         ]
-    } else if (y4 < f1 && (y2 < f2 && f2 < y3)) {
+    } else if (y4 <= f1 && (y2 <= f2 && f2 <= y3)) {
         slice = ((y3 - f1) * (x2 - x1)) / (f2 - f1)
         return [
             // lower right triangle
@@ -244,7 +244,7 @@ function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
                 [x1 + slice, y3],
                 [x3, y3],
                 [x3, f3],
-                [x1 + slice, y3]
+                [x3, f3]
             ],
             // bottom triangle
             [
@@ -261,7 +261,7 @@ function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
                 [x1 + slice, y3]
             ]
         ]
-    } else if ((y1 < f1 && f1 < y4) && y3 < f2) {
+    } else if ((y1 <= f1 && f1 <= y4) && y3 <= f2) {
         slice = ((y3 - f1) * (x2 - x1)) / (f2 - f1)
         return [
             // lower left triangle
@@ -269,7 +269,7 @@ function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
                 [x1 + slice, y3],
                 [x4, y4],
                 [x4, f4],
-                [x1 + slice, y3]
+                [x4, f4]
             ],
             // bottom triangle
             [
@@ -286,7 +286,7 @@ function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
                 [x4, f4]
             ]
         ]
-    } else if ((f2 < y2 && y4 < f4) || (f1 < y1 && y3 < f3)) {
+    } else if ((f2 <= y2 && y4 <= f4) || (f1 <= y1 && y3 <= f3)) {
         var sliceLeft = ((y1 - f4) * (x2 - x4)) / (f2 - f4)
         var sliceRight = ((y4 - f4) * (x2 - x4)) / (f2 - f4)
         return [
