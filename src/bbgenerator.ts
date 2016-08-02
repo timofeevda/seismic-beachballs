@@ -3,6 +3,11 @@ import * as bbutils from './bbutils.ts'
 
 let numeric = require("numeric");
 
+class ColoredPolygon {
+    isColored: boolean
+    constructor(public vertices: number[][], public tesselatedPolygons: number[][][]) { }
+}
+
 interface Ray {
     origin: number[],
     direction: number[]
@@ -152,7 +157,7 @@ function phiN(theta: number, lambda: number[]) {
     return bbmath.arccosd(Math.sqrt(a / b))
 }
 
-function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
+function subdivide(poly: number[][], f: (x: number) => number): ColoredPolygon[] {
     var x1 = poly[0][0]
     var y1 = poly[0][1]
     var x2 = poly[1][0]
@@ -167,171 +172,86 @@ function subdivide(poly: number[][], f: (x: number) => number): number[][][] {
     var f3 = f(x3)
     var f4 = f(x4)
 
-    var slice: number
-
     if ((y1 <= f1 && f1 <= y4) && (y2 <= f2 && f2 <= y3)) {
-        return [
-            // lower quadrilateral
-            [
-                [x1, y1],
-                [x2, y2],
-                [x2, f2],
-                [x1, f1]
-            ],
-            // upper quadrilateral
-            [
-                [x4, y4],
-                [x3, y3],
-                [x2, f2],
-                [x1, f1]
-            ]
-        ]
+
+        let lowerQuadrilateral = [[x1, y1], [x2, y2], [x2, f2], [x1, f1]]
+        let upperQuadraliteral = [[x4, y4], [x3, y3], [x2, f2], [x1, f1]]
+        return [new ColoredPolygon(lowerQuadrilateral, [lowerQuadrilateral]),
+            new ColoredPolygon(upperQuadraliteral, [upperQuadraliteral])]
+
     } else if ((y1 <= f1 && f1 <= y4) && f2 <= y2) {
-        slice = ((y1 - f1) * (x2 - x1)) / (f2 - f1)
-        return [
-            // upper left triangle
-            [
-                [x1, f1],
-                [x1, y1],
-                [x1 + slice, y1],
-                [x1, f1]
-            ],
-            // bottom triangle
-            [
-                [x4, y4],
-                [x2, y2],
-                [x3, y3],
-                [x4, y4]
-            ],
-            // remaining 4-sided polygon
-            [
-                [x4, y4],
-                [x2, y2],
-                [x1 + slice, y1],
-                [x1, f1]
-            ]
-        ]
+
+        let slice = ((y1 - f1) * (x2 - x1)) / (f2 - f1)
+        let upperLeftTriangle = [[x1, f1], [x1, y1], [x1 + slice, y1], [x1, f1]]
+        let remainingPentagon = [[x1, f1], [x1 + slice, y1], [x2, y2], [x3, y3], [x4, y4]]
+        // split pentagon
+        let bottomTriangle = [[x4, y4], [x2, y2], [x3, y3], [x4, y4]]
+        let remainingQuad = [[x4, y4], [x2, y2], [x1 + slice, y1], [x1, f1]]
+        return [new ColoredPolygon(upperLeftTriangle, [upperLeftTriangle]),
+            new ColoredPolygon(remainingPentagon, [bottomTriangle, remainingQuad])]
+
     } else if (f1 <= y1 && (y2 <= f2 && f2 <= y3)) {
-        slice = ((y1 - f1) * (x2 - x1)) / (f2 - f1)
-        return [
-            // upper right triangle
-            [
-                [x1 + slice, y1],
-                [x2, y2],
-                [x2, f2],
-                [x1 + slice, y1]
-            ],
-            // bottom triangle
-            [
-                [x4, y4],
-                [x1, y1],
-                [x3, y3],
-                [x4, y4]
-            ],
-            // remaining 4-sided polygon
-            [
-                [x1, y1],
-                [x3, y3],
-                [x2, f2],
-                [x1 + slice, y1]
-            ]
-        ]
+
+        let slice = ((y1 - f1) * (x2 - x1)) / (f2 - f1)
+        let upperRightTriangle = [[x1 + slice, y1], [x2, y2], [x2, f2], [x2, f2]]
+        let remainingPentagon = [[x1 + slice, y1], [x2, f2], [x3, y3], [x4, y4], [x1, y1]]
+        let bottomTriangle = [[x4, y4], [x1, y1], [x3, y3], [x4, y4]]
+        let remainingQuad = [[x1, y1], [x3, y3], [x2, f2], [x1 + slice, y1]]
+        return [new ColoredPolygon(upperRightTriangle, [upperRightTriangle]),
+            new ColoredPolygon(remainingPentagon, [bottomTriangle, remainingQuad])]
+
     } else if (y4 <= f1 && (y2 <= f2 && f2 <= y3)) {
-        slice = ((y3 - f1) * (x2 - x1)) / (f2 - f1)
-        return [
-            // lower right triangle
-            [
-                [x1 + slice, y3],
-                [x3, y3],
-                [x3, f3],
-                [x3, f3]
-            ],
-            // bottom triangle
-            [
-                [x1, y1],
-                [x2, y2],
-                [x4, y4],
-                [x1, y1]
-            ],
-            // remaining 4-sided polygon
-            [
-                [x4, y4],
-                [x2, y2],
-                [x2, f2],
-                [x1 + slice, y3]
-            ]
-        ]
+
+        let slice = ((y3 - f1) * (x2 - x1)) / (f2 - f1)
+        let lowerRightTriangle = [[x1 + slice, y3], [x3, y3], [x3, f3], [x3, f3]]
+        let remainingPentagon = [[x1 + slice, y3], [x3, f3], [x2, y2], [x1, y1], [x4, y4]]
+        let bottomTriangle = [[x1, y1], [x2, y2], [x4, y4], [x1, y1]]
+        let remainingQuad = [[x4, y4], [x2, y2], [x2, f2], [x1 + slice, y3]]
+        return [new ColoredPolygon(lowerRightTriangle, [lowerRightTriangle]),
+            new ColoredPolygon(remainingPentagon, [bottomTriangle, remainingQuad])]
+
     } else if ((y1 <= f1 && f1 <= y4) && y3 <= f2) {
-        slice = ((y3 - f1) * (x2 - x1)) / (f2 - f1)
-        return [
-            // lower left triangle
-            [
-                [x1 + slice, y3],
-                [x4, y4],
-                [x4, f4],
-                [x4, f4]
-            ],
-            // bottom triangle
-            [
-                [x1, y1],
-                [x2, y2],
-                [x3, y3],
-                [x1, y1]
-            ],
-            // remaining 4-sided polygon
-            [
-                [x1, y1],
-                [x3, y3],
-                [x1 + slice, y3],
-                [x4, f4]
-            ]
-        ]
+
+        let slice = ((y3 - f1) * (x2 - x1)) / (f2 - f1)
+        let lowerLeftTriangle = [[x1 + slice, y3], [x4, y4], [x4, f4], [x4, f4]]
+        let remainingPentagon = [[x1 + slice, y3], [x3, y3], [x2, y2], [x1, y1], [x1, f1]]
+        let bottomTriangle = [[x1, y1], [x2, y2], [x3, y3], [x1, y1]]
+        let remainingQuad = [[x1, y1], [x3, y3], [x1 + slice, y3], [x4, f4]]
+        return [new ColoredPolygon(lowerLeftTriangle, [lowerLeftTriangle]),
+            new ColoredPolygon(remainingPentagon, [bottomTriangle, remainingQuad])]
+
     } else if ((f2 <= y2 && y4 <= f4) || (f1 <= y1 && y3 <= f3)) {
-        var sliceLeft = ((y1 - f4) * (x2 - x4)) / (f2 - f4)
-        var sliceRight = ((y4 - f4) * (x2 - x4)) / (f2 - f4)
-        return [
-            // left quadrilateral
-            [
-                [x4 + sliceLeft, y1],
-                [x2, y2],
-                [x3, y3],
-                [x4 + sliceRight, y3]
-            ],
-            // right quadrilateral
-            [
-                [x4 + sliceLeft, y1],
-                [x1, y1],
-                [x4, y4],
-                [x4 + sliceRight, y3]
-            ]
-        ]
+
+        let sliceLeft = ((y1 - f4) * (x2 - x4)) / (f2 - f4)
+        let sliceRight = ((y4 - f4) * (x2 - x4)) / (f2 - f4)
+
+        let leftQuadrilateral = [[x4 + sliceLeft, y1], [x2, y2], [x3, y3], [x4 + sliceRight, y3]]
+        let rightQuadraliteral = [[x4 + sliceLeft, y1], [x1, y1], [x4, y4], [x4 + sliceRight, y3]]
+
+        return [new ColoredPolygon(leftQuadrilateral, [leftQuadrilateral]),
+            new ColoredPolygon(rightQuadraliteral, [rightQuadraliteral])]
     } else {
-        // return whole polygon
-        return [
-            [
-                [x1, y1],
-                [x2, y2],
-                [x3, y3],
-                [x4, y4]
-            ]
-        ]
+
+        let wholePolygon = [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
+        return [new ColoredPolygon(wholePolygon, [wholePolygon])]
     }
 }
 
-function subdivideForLambda(poly: number[][], lambda: number[]) {
+function subdivideForLambda(poly: number[][], lambda: number[]): ColoredPolygon[] {
     return subdivide(poly, theta => phiN(theta, lambda))
 }
 
-function orangeSlice(theta1: number, theta2: number) {
+function orangeSlice(theta1: number, theta2: number): ColoredPolygon[] {
     var subinterval = Math.min.apply(Math, (range(1, 30, 1)
         .filter(i => (theta2 - theta1) / i <= 10)))
 
     return basicPolygons(slice(theta1, theta2, subinterval), range(0, 180, 10))
         .map(polygon => polygon.map(vector2 => xyztp(vector2[0], vector2[1])))
+        .map(polygon => new ColoredPolygon(polygon, [polygon]))
 }
 
-function subdividePolyList(polyList: number[][][], lambda: number[]) {
-    var dividedPolygons: number[][][] = []
+function subdividePolyList(polyList: number[][][], lambda: number[]): ColoredPolygon[] {
+    var dividedPolygons: ColoredPolygon[] = []
     polyList.forEach(polygon => {
         subdivideForLambda(polygon, lambda).forEach(polygon => {
             dividedPolygons.push(polygon)
@@ -341,26 +261,27 @@ function subdividePolyList(polyList: number[][][], lambda: number[]) {
 }
 
 function polyListForBeachball0(lambda: number[], polyList: number[][][]) {
-    var polygons: number[][][] = []
+    let polygons: ColoredPolygon[] = []
     if ((lambda[0] >= 0 && lambda[1] >= 0 && lambda[2] >= 0) || (lambda[0] <= 0 && lambda[1] <= 0 && lambda[2] <= 0)) {
         polygons = polygons.concat(polyList.map(polygon => {
-            return polygon
+            let poly = polygon
                 .map(point => xyztp(point[0], point[1]))
                 .map(point => numeric.dot(zref, point))
+            return new ColoredPolygon(poly, [poly])
         }))
 
         polygons = polygons.concat(polyList.map(polygon => {
-            return polygon
-                .map(point => xyztp(point[0], point[1]))
+            let poly = polygon.map(point => xyztp(point[0], point[1]))
+            return new ColoredPolygon(poly, [poly])
         }))
 
         return polygons
     } else if (lambda[0] * lambda[1] * lambda[2] === 0) {
 
-        var slice1 = orangeSlice(-th0(lambda), th0(lambda))
-        var slice2 = orangeSlice(th0(lambda), -th0(lambda) + 180)
-        var slice3 = orangeSlice(-th0(lambda) + 180, th0(lambda) + 180)
-        var slice4 = orangeSlice(th0(lambda) + 180, -th0(lambda) + 360)
+        let slice1 = orangeSlice(-th0(lambda), th0(lambda))
+        let slice2 = orangeSlice(th0(lambda), -th0(lambda) + 180)
+        let slice3 = orangeSlice(-th0(lambda) + 180, th0(lambda) + 180)
+        let slice4 = orangeSlice(th0(lambda) + 180, -th0(lambda) + 360)
 
         polygons = polygons.concat(slice1)
         polygons = polygons.concat(slice2)
@@ -371,23 +292,36 @@ function polyListForBeachball0(lambda: number[], polyList: number[][][]) {
     } else {
         var division = subdividePolyList(polyList, lambda)
         division.forEach(function (polygon) {
-            var poly3D = polygon.map(function (point) {
+            var poly3D = polygon.vertices.map(function (point) {
                 var point3D = xyztp(point[0], point[1])
                 point3D = numeric.dot(zref, point3D)
                 return point3D
             })
 
-            polygons.push(poly3D)
+            var tesselated3D = polygon.tesselatedPolygons.map(polygon => {
+                return polygon.map(function (point) {
+                    var point3D = xyztp(point[0], point[1])
+                    point3D = numeric.dot(zref, point3D)
+                    return point3D
+                })
+            })
+
+            polygons.push(new ColoredPolygon(poly3D, tesselated3D))
         })
 
         division = subdividePolyList(polyList, lambda)
         division.forEach(function (polygon) {
-            var poly3D = polygon.map(function (point) {
-                var point3D = xyztp(point[0], point[1])
-                return point3D
+            var poly3D = polygon.vertices.map(function (point) {
+                return xyztp(point[0], point[1])
             })
 
-            polygons.push(poly3D)
+            var tesselated3D = polygon.tesselatedPolygons.map(polygon => {
+                return polygon.map(function (point) {
+                    return xyztp(point[0], point[1])
+                })
+            })
+
+            polygons.push(new ColoredPolygon(poly3D, tesselated3D))
         })
         return polygons
     }
@@ -414,7 +348,7 @@ function polyListForBeachBall(lambda: number[], patternRotation: number[], U: nu
     var coloredPolys: Array<{ vertices: number[][], compressional: boolean }> = []
     polys.forEach(function (polygon) {
         var mm = numeric.transpose(cycleMat(lambda))
-        polygon.forEach(function (point) {
+        polygon.vertices.forEach(function (point) {
             // rotate with cycle mat
             var p = numeric.dot(mm, point)
             // rotate point
@@ -424,22 +358,39 @@ function polyListForBeachBall(lambda: number[], patternRotation: number[], U: nu
             point[2] = rotp[2]
         })
 
-        var xmean = 0
-        var ymean = 0
-        var zmean = 0
-        polygon.forEach(function (point) {
+        polygon.tesselatedPolygons.forEach(polygon => {
+            polygon.forEach(function (point) {
+                // rotate with cycle mat
+                var p = numeric.dot(mm, point)
+                // rotate point
+                var rotp = numeric.dot(U, p)
+                point[0] = rotp[0]
+                point[1] = rotp[1]
+                point[2] = rotp[2]
+            })
+        })
+
+        let xmean = 0
+        let ymean = 0
+        let zmean = 0
+        polygon.vertices.forEach(function (point) {
             xmean += point[0]
             ymean += point[1]
             zmean += point[2]
         })
-        xmean /= 4
-        ymean /= 4
-        zmean /= 4
+        xmean /= polygon.vertices.length
+        ymean /= polygon.vertices.length
+        zmean /= polygon.vertices.length
 
-        coloredPolys.push({
-            vertices: polygon,
-            compressional: isColored([xmean, ymean, zmean], patternRotation)
+        let isCompressional = isColored([xmean, ymean, zmean], patternRotation)
+        let tesselated =polygon.tesselatedPolygons.map(polygon => {
+            return {
+                vertices: polygon,
+                compressional: isCompressional
+            }
         })
+
+        coloredPolys = coloredPolys.concat(tesselated)
 
     })
     return coloredPolys
@@ -664,7 +615,6 @@ function splitPolygon(polygon: { vertices: number[][], compressional: boolean })
  * @returns set of filtered polygons representing lower hemisphere
  */
 function filterPolygons(polygons: { vertices: number[][], compressional: boolean }[]) {
-    // don't corrupt original polygons and create deep filtered copy
     var filteredPolygons: { vertices: number[][], compressional: boolean }[] = []
 
     polygons.forEach(polygon => {
@@ -676,13 +626,13 @@ function filterPolygons(polygons: { vertices: number[][], compressional: boolean
 
         // add polygon if all vertices are below zero
         if (lower) {
-            filteredPolygons.push({ vertices: polygon.vertices.slice(0), compressional: polygon.compressional })
+            filteredPolygons.push(polygon)
         } else if (!higher) {
             // this means that polygon is intersected by zero plane, so we
             // need to split polygons intersected by zero plane (kind
             // of tessellation to improve rendering quality)
             splitPolygon(polygon).forEach(polygon => {
-                filteredPolygons.push({ vertices: polygon.vertices.slice(0), compressional: polygon.compressional })
+                filteredPolygons.push(polygon)
             })
         }
     })
@@ -707,7 +657,7 @@ function lowerHemisphereFromMomentTensor(mt: bbutils.SphericalMomentTensor & { s
  *
  * @param polygons original moment tensor polygons
  *
- * @returns cloned polygons set representing lower hemisphere of beachball
+ * @returns polygons set representing lower hemisphere of beachball
  */
 function rawLowerHemisphere(polygons: { vertices: number[][], compressional: boolean }[]) {
     return filterPolygons(polygons)
