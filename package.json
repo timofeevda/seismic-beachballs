@@ -11,7 +11,7 @@
   "typings": "src/entry",
   "scripts": {
     "tsc": "tsc",
-    "postinstall": "typings install"
+    "postinstall": "typings install --global"
   },
   "author": "Denis Timofeev <timofeevda@gmail.com>",
   "repository": {

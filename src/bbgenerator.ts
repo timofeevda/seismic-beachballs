@@ -578,7 +578,7 @@ function mt2lambda(mt: bbutils.SphericalMomentTensor & { strike: number, dip: nu
  *
  * @returns beachball polygons
  */
-function beachBall(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
+function beachBall(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }): { vertices: number[][], compressional: boolean }[] {
     var {lambda, patternRotation, rotationMatrix} = mt2lambda(mt)
     return polyListForBeachBall(lambda, patternRotation, rotationMatrix)
 }
@@ -664,6 +664,7 @@ function splitPolygon(polygon: { vertices: number[][], compressional: boolean })
  * @returns set of filtered polygons representing lower hemisphere
  */
 function filterPolygons(polygons: { vertices: number[][], compressional: boolean }[]) {
+    // don't corrupt original polygons and create deep filtered copy
     var filteredPolygons: { vertices: number[][], compressional: boolean }[] = []
 
     polygons.forEach(polygon => {
@@ -675,13 +676,13 @@ function filterPolygons(polygons: { vertices: number[][], compressional: boolean
 
         // add polygon if all vertices are below zero
         if (lower) {
-            filteredPolygons.push(polygon)
+            filteredPolygons.push({ vertices: polygon.vertices.slice(0), compressional: polygon.compressional })
         } else if (!higher) {
             // this means that polygon is intersected by zero plane, so we
             // need to split polygons intersected by zero plane (kind
             // of tessellation to improve rendering quality)
             splitPolygon(polygon).forEach(polygon => {
-                filteredPolygons.push(polygon)
+                filteredPolygons.push({ vertices: polygon.vertices.slice(0), compressional: polygon.compressional })
             })
         }
     })
@@ -697,39 +698,19 @@ function filterPolygons(polygons: { vertices: number[][], compressional: boolean
  *
  * @returns polygons set representing lower hemisphere of beachball
  */
-function lowerHemisphere(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
+function lowerHemisphereFromMomentTensor(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
     return filterPolygons(beachBall(mt))
 }
 
 /**
- * Return polygons representing upper hemisphere of beachball
+ * Return polygons representing lower hemisphere of beachball
  *
- * @param mt moment tensor object with 6 moment tensor components and
- * strike/dip/slip as properties
+ * @param polygons original moment tensor polygons
  *
- * @returns upper hemisphere of beachball
+ * @returns cloned polygons set representing lower hemisphere of beachball
  */
-function upperHemisphere(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
-    var polygons = beachBall(mt)
-
-    // negate vertices to treat upper hemisphere in the same way
-    // as lower one
-    polygons.forEach(polygon => {
-        polygon.vertices.forEach(point => {
-            point[2] = -point[2]
-        })
-    })
-
-    var filteredPolygons = filterPolygons(polygons)
-
-    // negate back to transform lower hemisphere to upper hemisphere
-    filteredPolygons.forEach(polygon => {
-        polygon.vertices.forEach(point => {
-            point[2] = -point[2]
-        })
-    })
-
-    return filteredPolygons
+function rawLowerHemisphere(polygons: { vertices: number[][], compressional: boolean }[]) {
+    return filterPolygons(polygons)
 }
 
 /**
@@ -767,6 +748,25 @@ function orthographicProjection(vertex: number[]) {
  * Return polygons representing lower hemisphere of beachball. Polygons
  * are project on horizontal plane - z values are zeroed
  *
+ * @param polygons original moment tensor polygons
+ *
+ * @returns lower hemisphere of beachball with polygons projected on
+ * horizontal plane with orthographic projection
+ */
+function rawLowerHemisphereOrthographic(polygons: { vertices: number[][], compressional: boolean }[]) {
+    var lHemisphere = rawLowerHemisphere(polygons)
+    lHemisphere.forEach(polygon => {
+        polygon.vertices.forEach(vertex => {
+            orthographicProjection(vertex)
+        })
+    })
+    return lHemisphere
+}
+
+/**
+ * Return polygons representing lower hemisphere of beachball. Polygons
+ * are project on horizontal plane - z values are zeroed
+ *
  * @param mt moment tensor object with 6 moment tensor components and
  * strike/dip/slip as properties
  *
@@ -774,10 +774,23 @@ function orthographicProjection(vertex: number[]) {
  * horizontal plane with orthographic projection
  */
 function lowerHemisphereOrthographic(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
-    var lHemisphere = lowerHemisphere(mt)
+    return rawLowerHemisphereOrthographic(lowerHemisphereFromMomentTensor(mt))
+}
+
+/**
+ * Return polygons representing lower hemisphere of beachball. Polygons
+ * are project on horizontal plane using Wulff Net stereographic projection
+ *
+ * @param polygons original moment tensor polygons
+ *
+ * @returns lower hemisphere of beachball with polygons projected on
+ * horizontal plane with Wulff Net stereographic projection
+ */
+function rawLowerHemisphereWulffNet(polygons: { vertices: number[][], compressional: boolean }[]) {
+    var lHemisphere = rawLowerHemisphere(polygons)
     lHemisphere.forEach(polygon => {
         polygon.vertices.forEach(vertex => {
-            orthographicProjection(vertex)
+            wulffNetProjection(vertex)
         })
     })
     return lHemisphere
@@ -794,10 +807,23 @@ function lowerHemisphereOrthographic(mt: bbutils.SphericalMomentTensor & { strik
  * horizontal plane with Wulff Net stereographic projection
  */
 function lowerHemisphereWulffNet(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
-    var lHemisphere = lowerHemisphere(mt)
+    return rawLowerHemisphereWulffNet(lowerHemisphereFromMomentTensor(mt))
+}
+
+/**
+ * Return polygons representing lower hemisphere of beachball. Polygons
+ * are project on horizontal plane using Equal Area Net stereographic projection
+ *
+ * @param polygons original moment tensor polygons
+ *
+ * @returns lower hemisphere of beachball with polygons projected on
+ * horizontal plane with Equal Area Net stereographic projection
+ */
+function rawLowerHemisphereEqualAreaNet(polygons: { vertices: number[][], compressional: boolean }[]) {
+    var lHemisphere = rawLowerHemisphere(polygons)
     lHemisphere.forEach(polygon => {
         polygon.vertices.forEach(vertex => {
-            wulffNetProjection(vertex)
+            equalAreaNetProjection(vertex)
         })
     })
     return lHemisphere
@@ -814,79 +840,7 @@ function lowerHemisphereWulffNet(mt: bbutils.SphericalMomentTensor & { strike: n
  * horizontal plane with Equal Area Net stereographic projection
  */
 function lowerHemisphereEqualAreaNet(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
-    var lHemisphere = lowerHemisphere(mt)
-    lHemisphere.forEach(polygon => {
-        polygon.vertices.forEach(vertex => {
-            equalAreaNetProjection(vertex)
-        })
-    })
-    return lHemisphere
-}
-
-/**
- * Return polygons representing upper hemisphere of beachball. Polygons
- * are project on horizontal plane - z values are zeroed
- *
- * @param mt - moment tensor object with 6 moment tensor components and
- * strike/dip/slip as properties
- *
- * @returns upper hemisphere of beachball with polygons projected on
- * horizontal plane with orthographic projection
- */
-function upperHemisphereOrthographic(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
-    var uHemisphere = upperHemisphere(mt)
-    // zero all z values
-    uHemisphere.forEach(polygon => {
-        polygon.vertices.forEach(vertex => {
-            vertex[2] = -vertex[2]
-            orthographicProjection(vertex)
-        })
-    })
-    return uHemisphere
-}
-
-/**
- * Return polygons representing upper hemisphere of beachball. Polygons
- * are project on horizontal plane using Wulff Net stereographic projection
- *
- * @param mt moment tensor object with 6 moment tensor components and
- * strike/dip/slip as properties
- *
- * @returns upper hemisphere of beachball with polygons projected on
- * horizontal plane with Wulff Net stereographic projection
- */
-function upperHemisphereWulffNet(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
-    var uHemisphere = upperHemisphere(mt)
-    // zero all z values
-    uHemisphere.forEach(polygon => {
-        polygon.vertices.forEach(vertex => {
-            vertex[2] = -vertex[2]
-            wulffNetProjection(vertex)
-        })
-    })
-    return uHemisphere
-}
-
-/**
- * Return polygons representing lower hemisphere of beachball. Polygons
- * are project on horizontal plane using Equal Area Net stereographic projection
- *
- * @param mt moment tensor object with 6 moment tensor components and
- * strike/dip/slip as properties
- *
- * @returns lower hemisphere of beachball with polygons projected on
- * horizontal plane with Equal Area Net stereographic projection
- */
-function upperHemisphereEqualAreaNet(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
-    var uHemisphere = upperHemisphere(mt)
-    // zero all z values
-    uHemisphere.forEach(polygon => {
-        polygon.vertices.forEach(vertex => {
-            vertex[2] = -vertex[2]
-            equalAreaNetProjection(vertex)
-        })
-    })
-    return uHemisphere
+    return rawLowerHemisphereEqualAreaNet(lowerHemisphereFromMomentTensor(mt))
 }
 
 /**
@@ -904,13 +858,13 @@ function normalslip(mt: bbutils.SphericalMomentTensor & { strike: number, dip: n
 
 export {
 beachBall,
-lowerHemisphere,
-upperHemisphere,
+lowerHemisphereFromMomentTensor,
 lowerHemisphereEqualAreaNet,
 lowerHemisphereWulffNet,
 lowerHemisphereOrthographic,
-upperHemisphereEqualAreaNet,
-upperHemisphereWulffNet,
-upperHemisphereOrthographic,
+rawLowerHemisphere,
+rawLowerHemisphereEqualAreaNet,
+rawLowerHemisphereWulffNet,
+rawLowerHemisphereOrthographic,
 normalslip
 }
