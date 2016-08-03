@@ -276,20 +276,23 @@ function polyListForBeachball0(lambda: number[], polyList: number[][][]) {
         }))
 
         return polygons
-    } else if (lambda[0] * lambda[1] * lambda[2] === 0) {
+    } 
+    // try to go with general plotting code
+    // else if (lambda[0] * lambda[1] * lambda[2] === 0) {
 
-        let slice1 = orangeSlice(-th0(lambda), th0(lambda))
-        let slice2 = orangeSlice(th0(lambda), -th0(lambda) + 180)
-        let slice3 = orangeSlice(-th0(lambda) + 180, th0(lambda) + 180)
-        let slice4 = orangeSlice(th0(lambda) + 180, -th0(lambda) + 360)
+    //     let slice1 = orangeSlice(-th0(lambda), th0(lambda))
+    //     let slice2 = orangeSlice(th0(lambda), -th0(lambda) + 180)
+    //     let slice3 = orangeSlice(-th0(lambda) + 180, th0(lambda) + 180)
+    //     let slice4 = orangeSlice(th0(lambda) + 180, -th0(lambda) + 360)
 
-        polygons = polygons.concat(slice1)
-        polygons = polygons.concat(slice2)
-        polygons = polygons.concat(slice3)
-        polygons = polygons.concat(slice4)
+    //     polygons = polygons.concat(slice1)
+    //     polygons = polygons.concat(slice2)
+    //     polygons = polygons.concat(slice3)
+    //     polygons = polygons.concat(slice4)
 
-        return polygons
-    } else {
+    //     return polygons
+    // }
+     else {
         var division = subdividePolyList(polyList, lambda)
         division.forEach(function (polygon) {
             var poly3D = polygon.vertices.map(function (point) {
@@ -390,7 +393,7 @@ function polyListForBeachBall(lambda: number[], patternRotation: number[], U: nu
             }
         })
 
-        coloredPolys = coloredPolys.concat(tesselated)
+        tesselated.forEach(polygon => coloredPolys.push(polygon))
 
     })
     return coloredPolys
