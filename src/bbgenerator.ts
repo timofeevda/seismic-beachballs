@@ -242,12 +242,12 @@ function subdivideForLambda(poly: number[][], lambda: number[]): ColoredPolygon[
 }
 
 function orangeSlice(theta1: number, theta2: number): ColoredPolygon[] {
-    var subinterval = Math.min.apply(Math, (range(1, 30, 1)
-        .filter(i => (theta2 - theta1) / i <= 10)))
+    var subinterval = Math.min.apply(Math, (range(1, 60, 1)
+        .filter(i => (theta2 - theta1) / i <= 5)))
 
-    return basicPolygons(slice(theta1, theta2, subinterval), range(0, 180, 10))
-        .map(polygon => polygon.map(vector2 => xyztp(vector2[0], vector2[1])))
-        .map(polygon => new ColoredPolygon(polygon, [polygon]))
+    return basicPolygons(slice(theta1, theta2, subinterval), range(0, 180, 5))
+        .map(polygon => polygon.map(vector2 => xyztp(vector2[0], vector2[1])))        
+        .map(polygon => new ColoredPolygon(polygon, [polygon.map(point => point.map(v => v))]))
 }
 
 function subdividePolyList(polyList: number[][][], lambda: number[]): ColoredPolygon[] {
