@@ -327,11 +327,17 @@ function tpb2sdr(t: number[], p: number[], b: number[]) {
     // get strike, dip and rake from normal and slip
     var sdr = normslip2sdr(normal, slip)
 
+    // get strike, dip and rake for the swapped normal and slip
+    var sdr_swap = normslip2sdr(slip,normal)
+
     return {
         strike: sdr.strike,
         dip: sdr.dip,
         rake: sdr.rake,
         normalv: normal,
+        strike_swap: sdr_swap.strike,
+        dip_swap: sdr_swap.dip,
+        rake_swap: sdr_swap.rake,
         slipv: slip,
         taxis: [t[1], t[0], t[2]],
         paxis: [p[1], p[0], p[2]],
@@ -356,6 +362,9 @@ function mt2sdr(mt: SphericalMomentTensor) {
         strike: sdr.strike,
         dip: sdr.dip,
         rake: sdr.rake,
+        strike_swap: sdr.strike_swap,
+        dip_swap: sdr.dip_swap,
+        rake_swap: sdr.rake_swap,
         normalv: sdr.normalv,
         slipv: sdr.slipv,
         taxis: sdr.taxis,
