@@ -342,11 +342,11 @@ function cycleMat(vector3: number[]) {
     }
 }
 
-function polyListForBeachBall(lambda: number[], patternRotation: number[], U: number[][]) {
+function polyListForBeachBall(lambda: number[], patternRotation: number[], U: number[][], lonstep: number = 5, latstep: number = 5) {
     // clone lambda
     var lambdaClone = lambda.slice(0)
     var cycleDot = numeric.dot(cycleMat(lambda), lambdaClone)
-    var polyList = basicPolygons(range(0, 360, 5), range(0, 90, 5))
+    var polyList = basicPolygons(range(0, 360, lonstep), range(0, 90, latstep))
     var polys = polyListForBeachball0(cycleDot, polyList)
     var coloredPolys: Array<{ vertices: number[][], compressional: boolean }> = []
     polys.forEach(function (polygon) {
@@ -532,9 +532,9 @@ function mt2lambda(mt: bbutils.SphericalMomentTensor & { strike: number, dip: nu
  *
  * @returns beachball polygons
  */
-function beachBall(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }): { vertices: number[][], compressional: boolean }[] {
+function beachBall(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }, lonstep: number = 5, latstep: number = 5): { vertices: number[][], compressional: boolean }[] {
     var {lambda, patternRotation, rotationMatrix} = mt2lambda(mt)
-    return polyListForBeachBall(lambda, patternRotation, rotationMatrix)
+    return polyListForBeachBall(lambda, patternRotation, rotationMatrix, lonstep, latstep)
 }
 
 
@@ -651,8 +651,8 @@ function filterPolygons(polygons: { vertices: number[][], compressional: boolean
  *
  * @returns polygons set representing lower hemisphere of beachball
  */
-function lowerHemisphereFromMomentTensor(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
-    return filterPolygons(beachBall(mt))
+function lowerHemisphereFromMomentTensor(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }, lonstep: number = 5, latstep: number = 5) {
+    return filterPolygons(beachBall(mt, lonstep, latstep))
 }
 
 /**
@@ -792,8 +792,8 @@ function rawLowerHemisphereEqualAreaNet(polygons: { vertices: number[][], compre
  * @returns lower hemisphere of beachball with polygons projected on
  * horizontal plane with Equal Area Net stereographic projection
  */
-function lowerHemisphereEqualAreaNet(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }) {
-    return rawLowerHemisphereEqualAreaNet(lowerHemisphereFromMomentTensor(mt))
+function lowerHemisphereEqualAreaNet(mt: bbutils.SphericalMomentTensor & { strike: number, dip: number, slip: number }, lonstep: number = 5, latstep: number = 5) {
+    return rawLowerHemisphereEqualAreaNet(lowerHemisphereFromMomentTensor(mt, lonstep, latstep))
 }
 
 /**
