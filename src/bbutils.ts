@@ -381,13 +381,14 @@ function mt2sdr(mt: SphericalMomentTensor) {
  */
 function sdr2mt(sdr: { strike: number, dip: number, rake: number }): SphericalMomentTensor {
     var { strike, dip, rake} = sdr
+    let sq2 = 1/Math.sqrt(2.0)
     return {
-        Mrr: bbmath.sind(2 * dip) * bbmath.sind(rake),
-        Mtt: -1 * bbmath.sind(dip) * bbmath.cosd(rake) * bbmath.sind(2 * strike) + bbmath.sind(2 * dip) * bbmath.sind(rake) * Math.pow(bbmath.sind(strike), 2),
-        Mpp: bbmath.sind(dip) * bbmath.cosd(rake) * bbmath.sind(2 * strike) - bbmath.sind(2 * dip) * bbmath.sind(rake) * Math.pow(bbmath.cosd(strike), 2),
-        Mrt: -1 * bbmath.cosd(dip) * bbmath.cosd(rake) * bbmath.cosd(strike) + bbmath.cosd(2 * dip) * bbmath.sind(rake) * bbmath.sind(strike),
-        Mrp: bbmath.cosd(dip) * bbmath.cosd(rake) * bbmath.sind(strike) - bbmath.cosd(2 * dip) * bbmath.sind(rake) * bbmath.cosd(strike),
-        Mtp: -1 * bbmath.sind(dip) * bbmath.cosd(rake) * bbmath.cosd(2 * strike) + 0.5 * bbmath.sind(2 * dip) * bbmath.sind(rake) * bbmath.sind(2 * strike)
+        Mrr: sq2 * (bbmath.sind(2 * dip) * bbmath.sind(rake)),
+        Mtt: -sq2 * (bbmath.sind(dip) * bbmath.cosd(rake) * bbmath.sind(2 * strike) + bbmath.sind(2 * dip) * bbmath.sind(rake) * Math.pow(bbmath.sind(strike), 2)),
+        Mpp: sq2 * (bbmath.sind(dip) * bbmath.cosd(rake) * bbmath.sind(2 * strike) - bbmath.sind(2 * dip) * bbmath.sind(rake) * Math.pow(bbmath.cosd(strike), 2)),
+        Mrt: -sq2 * (bbmath.cosd(dip) * bbmath.cosd(rake) * bbmath.cosd(strike) + bbmath.cosd(2 * dip) * bbmath.sind(rake) * bbmath.sind(strike)),
+        Mrp: sq2 * (bbmath.cosd(dip) * bbmath.cosd(rake) * bbmath.sind(strike) - bbmath.cosd(2 * dip) * bbmath.sind(rake) * bbmath.cosd(strike)),
+        Mtp: -sq2 * (bbmath.sind(dip) * bbmath.cosd(rake) * bbmath.cosd(2 * strike) + 0.5 * bbmath.sind(2 * dip) * bbmath.sind(rake) * bbmath.sind(2 * strike))
     }
 }
 
