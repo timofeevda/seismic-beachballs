@@ -667,6 +667,34 @@ function rawLowerHemisphere(polygons: { vertices: number[][], compressional: boo
 }
 
 /**
+ * Return polygons representing upper hemisphere of beachball
+ *
+ * @param polygons original moment tensor polygons
+ *
+ * @returns polygons set representing upper hemisphere of beachball
+ */
+function rawUpperHemisphere(polygons: { vertices: number[][], compressional: boolean }[]) {
+     // negate vertices to treat upper hemisphere in the same way		
+     // as lower one		
+     polygons.forEach(polygon => {		
+         polygon.vertices.forEach(point => {		
+             point[2] = -point[2]		
+         })		
+     })		
+ 		
+     var filteredPolygons = filterPolygons(polygons)		
+ 		
+     // negate back to transform lower hemisphere to upper hemisphere		
+     filteredPolygons.forEach(polygon => {		
+         polygon.vertices.forEach(point => {		
+             point[2] = -point[2]		
+         })		
+     })		
+ 		
+     return filteredPolygons
+}
+
+/**
  * Modifies vertex applying Wulff Net projection
  *
  * @param vertex vertex to modify
@@ -819,5 +847,6 @@ rawLowerHemisphere,
 rawLowerHemisphereEqualAreaNet,
 rawLowerHemisphereWulffNet,
 rawLowerHemisphereOrthographic,
+rawUpperHemisphere,
 normalslip
 }
